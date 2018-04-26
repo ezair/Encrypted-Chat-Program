@@ -37,7 +37,7 @@ def receiveMsg(s):
 
             #if the message is blank we don't bother printing it
             if not str.endswith("> "):
-                print("\r" + str + "\n", end="", flush=True)
+                print("\r\r" + str + "\n", end="", flush=True)
             
             #close the connection
             if str.endswith(" /quit"):
@@ -77,7 +77,6 @@ def sendMsg(s):
 option = int(input("\n(1)Start a session\n(2)Connect to a session\nSelect an option: "))
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 session_open = 1
-
 
 #_______________________________________________________________________________________
 
