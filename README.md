@@ -12,7 +12,7 @@ Requirements to run this program:
 	Must have python3
 	
 	Files required:
-		pycrypto
+		chat.py
 		elgamal.py
 		aes.py
 
