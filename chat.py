@@ -18,6 +18,7 @@ import socket
 import sys
 import threading
 import getpass
+from os import system
 from elgamal import generatePrivateKey
 from elgamal import generateGenerator
 
@@ -42,10 +43,13 @@ def receiveMsg(s):
             #close the connection
             if str.endswith(" /quit"):
                 session_open = 0;
+                system("clear")
                 print("Connection closed.")
                 s.close()
                 sys.exit()
         else:
+            system("clear")
+            print("Connection closed.")
             s.close()
             sys.exit()
 
@@ -64,11 +68,14 @@ def sendMsg(s):
 
             #close connection in the even that user enters /q command
             if str.endswith("/quit"):
+                system("clear")
                 print("Connection closed.")
                 session_open = 0;
                 s.close()
                 sys.exit()
         else:
+            system("clear")
+            print("Connection closed.")
             s.close()
             sys.exit()
 
