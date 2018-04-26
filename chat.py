@@ -14,13 +14,12 @@ Description:    This program runs a peer to peer
                     pycrypto library
                     aes.py
 '''
-import socket
 import sys
-import threading
-import getpass
+import socket
+from threading import Thread
+from getpass import getpass
 from os import system
-from elgamal import generatePrivateKey
-from elgamal import generateGenerator
+from elgamal import generatePrivateKey, generateGenerator
 
 
 #Thread used for receiving messages.
@@ -92,7 +91,7 @@ session_open = 1
 if option == 1:
     host = input("Enter your session IP address: ")
     port = int(input("Enter your session port number: "))
-    password = getpass.getpass("Enter your session password: ")
+    password = getpass("Enter your session password: ")
     username =  "<" + input("Enter your session username: ") + "> "
 
     #create the session using given info.
@@ -103,8 +102,8 @@ if option == 1:
 
     #start therads
     c, addr = s.accept()
-    threading.Thread(target=receiveMsg, args=(c,)).start()
-    threading.Thread(target=sendMsg, args=(c,)).start()
+    Thread(target=receiveMsg, args=(c,)).start()
+    Thread(target=sendMsg, args=(c,)).start()
 
 
 #user is connecting to a session.
@@ -112,13 +111,13 @@ if option == 1:
 elif option == 2:
     host = input("Enter session IP: ")
     port = int(input("Enter session Port: "))
-    password = getpass.getpass("Enter session password: ")
+    password = getpass("Enter session password: ")
     username = "<" + input("Enter your session name: ") + "> "
 
 #attempt to connect to the session
     s.connect((host, port))
-    threading.Thread(target=receiveMsg, args=(s,)).start()
-    threading.Thread(target=sendMsg, args=(s,)).start()
+    Thread(target=receiveMsg, args=(s,)).start()
+    Thread(target=sendMsg, args=(s,)).start()
 
 
 #user entered a non-existent option
