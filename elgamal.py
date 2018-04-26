@@ -13,7 +13,8 @@ import random
 
 '''
 Returns the modular inverse of a number.
-Parameters: int a(the number you want the inverse of)
+Parameters: 
+			int a(the number you want the inverse of)
 			int b(your prime p value)
 Return type: int
 '''
@@ -32,7 +33,8 @@ def extendedEgcd(a, b):
 
 
 #checks to see if a number is prime
-#parameters: int num(the number you want to check if prime)
+#parameters: 
+#			int num(the number you want to check if prime)
 #Return type: boolean
 def isprime(num):
 	for i in range(200):
@@ -68,7 +70,8 @@ def generateGenerator(p):
 
 
 #Encrypt any give file.
-#parameters: string filename(name of the file you want to decrypt)
+#parameters: 
+#			string filename(name of the file you want to decrypt)
 #return type: void
 def encrypt(filename):
 	#keys and such
