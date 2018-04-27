@@ -22,6 +22,7 @@ from getpass import getpass
 from os import system
 from Elgamal import generatePrivateKey, generateGenerator
 
+
 #Thread used for receiving messages.
 #paramaters: 
 #           socket s(socket that the client connects to)
@@ -33,14 +34,14 @@ def receiveMsg(s):
     while True:
         #Receive the message here
         if session_open:
-            str = s.recv(100).decode()
+            msg = s.recv(100).decode()
 
             #if the message is blank we don't bother printing it
-            if not str.endswith("> "):
-                print("\r\r" + str + "\n", end="", flush=True)
+            if not msg.endswith("> "):
+                print("\r\r" + msg + "\n", end="", flush=True)
             
             #close the connection
-            if str.endswith(" /quit"):
+            if msg.endswith(" /quit"):
                 session_open = 0;
                 system("clear")
                 print("Connection closed.")
@@ -62,11 +63,11 @@ def sendMsg(s):
     global username
     while True:
         if session_open:
-            str = username + input(username)
-            s.send(str.encode())
+            msg = username + input(username)
+            s.send(msg.encode())
 
             #close connection in the even that user enters /q command
-            if str.endswith("/quit"):
+            if msg.endswith("/quit"):
                 system("clear")
                 print("Connection closed.")
                 session_open = 0;
