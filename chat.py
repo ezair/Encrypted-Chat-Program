@@ -16,11 +16,11 @@ Description:    This program runs a peer to peer
 '''
 import sys
 import socket
+import AES
 from threading import Thread
 from getpass import getpass
 from os import system
 from Elgamal import generatePrivateKey, generateGenerator
-
 
 #Thread used for receiving messages.
 #paramaters: 
