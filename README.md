@@ -13,8 +13,8 @@ Requirements to run this program:
 	
 	Files required:
 		chat.py
-		elgamal.py
-		aes.py
+		Elgamal.py
+		AES.py
 
 	Libraries you must install:
 		pycrypto:
