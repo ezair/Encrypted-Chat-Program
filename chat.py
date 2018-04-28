@@ -10,9 +10,9 @@ Description:    This program runs a peer to peer
 
                 Dependencies:
                     python3
-                    elgamal.py
-                    pycrypto library
-                    aes.py
+                    Elgamal.py
+                    pycrypto library (sudo apt-get install pycrypto)
+                    AES.py
 '''
 import sys
 import socket
@@ -21,6 +21,19 @@ from threading import Thread
 from getpass import getpass
 from os import system
 from Elgamal import generatePrivateKey, generateGenerator
+
+
+#close the connection on server.
+#parameters:
+#			socket s(socket that the server is on)
+#return type: void
+def closeConnection(s):
+	global session_open
+	system("clear")
+	print("Connection closed.")
+	session_open = 0
+	s.close()
+	sys.exit()
 
 
 #Thread used for receiving messages.
@@ -35,23 +48,15 @@ def receiveMsg(s):
         #Receive the message here
         if session_open:
             msg = s.recv(100).decode()
-
-            #if the message is blank we don't bother printing it
+            #if the message is blank we don't print it
             if not msg.endswith("> "):
-                print("\r\r" + msg + "\n", end="", flush=True)
-            
+                print("\r\r" + msg + "\n", end="", flush=True)            
             #close the connection
             if msg.endswith(" /quit"):
-                session_open = 0;
-                system("clear")
-                print("Connection closed.")
-                s.close()
-                sys.exit()
+                closeConnection(s)
+        #close
         else:
-            system("clear")
-            print("Connection closed.")
-            s.close()
-            sys.exit()
+            closeConnection(s)
 
 
 #Thread used for sending messages.
@@ -62,22 +67,16 @@ def sendMsg(s):
     global session_open
     global username
     while True:
+    	#retrieve message here.
         if session_open:
             msg = username + input(username)
             s.send(msg.encode())
-
-            #close connection in the even that user enters /q command
+            #close connection if "/quit" as input
             if msg.endswith("/quit"):
-                system("clear")
-                print("Connection closed.")
-                session_open = 0;
-                s.close()
-                sys.exit()
+                closeConnection(s)
+        #close
         else:
-            system("clear")
-            print("Connection closed.")
-            s.close()
-            sys.exit()
+        	closeConnection(s)
 
 
 #Create a session (as a server) and wait for a client to connect.
@@ -91,11 +90,13 @@ def startSession(s):
     port = int(input("Enter your session port number: "))
     password = getpass("Enter your session password: ")
     username =  "<" + input("Enter your session username: ") + "> "
+    
     #create the session using given info.
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     s.bind((host, port))
     s.listen(5)
     print("Waiting for a client to connect...")
+    
     #start therads
     c, addr = s.accept()
     Thread(target=receiveMsg, args=(c,)).start()
@@ -113,8 +114,10 @@ def connectToSession(s):
     port = int(input("Enter session Port: "))
     password = getpass("Enter session password: ")
     username = "<" + input("Enter your session name: ") + "> "
+    
     #attempt to connect to the session
     s.connect((host, port))
+    
     #start threads
     Thread(target=receiveMsg, args=(s,)).start()
     Thread(target=sendMsg, args=(s,)).start()
