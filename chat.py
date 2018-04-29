@@ -20,7 +20,7 @@ import AES
 from threading import Thread
 from getpass import getpass
 from os import system
-from Elgamal import generatePrivateKey, generateGenerator
+from Elgamal import generatePrivateKey, generateGenerator, generateRandomPrime
 
 
 #close the connection on server.
@@ -64,6 +64,14 @@ def receiveMsg(s, username):
 #return type: void 
 def sendMsg(s, username):
     global session_open
+
+    '''
+    #grab keys from the other user.
+    #now, we can form g to the gab and save it.
+    #string is formated as "g g^key p" with spaces between.
+    keys = s.recv(100).decode().split(" ")
+    gab = pow(keys[1], b)
+    '''
     while True:
     	#retrieve message here.
         if session_open:
@@ -93,7 +101,16 @@ def startSession(s):
     s.bind((host, port))
     s.listen(5)
     print("Waiting for a client to connect...")
-    
+
+    '''
+    #create keys and send them to client as a tuple
+    p = generateRandomPrime(256)
+    a = generatePrivateKey(256)
+    g = generateGenerator(p)
+    ga = pow(g, a, p)
+    keys = str(g) + " " + str(ga), + " " + str(p)
+    '''
+
     #start therads
     c, addr = s.accept()
     Thread(target=receiveMsg, args=(c, username)).start()
@@ -109,15 +126,12 @@ def connectToSession(s):
     host = input("Enter session IP: ")
     port = int(input("Enter session Port: "))
     password = getpass("Enter session password: ")
-    username = "<" + input("Enter your session name: ") + "> "
-    
-    #attempt to connect to the session
+    username = "<" + input("Enter your session name: ") + "> " 
     s.connect((host, port))
-    
+
     #start threads
     Thread(target=receiveMsg, args=(s, username)).start()
     Thread(target=sendMsg, args=(s, username)).start()
-
 
 #_____________________________________________________________________________________
 #int used as a boolean to determine if chat is still open
