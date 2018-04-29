@@ -28,21 +28,20 @@ from Elgamal import generatePrivateKey, generateGenerator
 #			socket s(socket that the server is on)
 #return type: void
 def closeConnection(s):
-	global session_open
-	system("clear")
-	print("Connection closed.")
-	session_open = 0
-	s.close()
-	sys.exit()
+    global session_open
+    system("clear")
+    print("Connection closed.")
+    session_open = 0
+    s.close()
+    sys.exit()
 
 
 #Thread used for receiving messages.
 #paramaters: 
 #           socket s(socket that the client connects to)
 #return type: void 
-def receiveMsg(s):
+def receiveMsg(s, username):
     global session_open
-    global username
     print("*Enter '/quit' to exit chat*")
     while True:
         #Receive the message here
@@ -63,16 +62,15 @@ def receiveMsg(s):
 #paramaters: 
 #           socket s(socket that the client connects to)
 #return type: void 
-def sendMsg(s):
+def sendMsg(s, username):
     global session_open
-    global username
     while True:
     	#retrieve message here.
         if session_open:
             msg = username + input(username)
             s.send(msg.encode())
             #close connection if "/quit" as input
-            if msg.endswith("/quit"):
+            if msg.endswith(" /quit"):
                 closeConnection(s)
         #close
         else:
@@ -84,8 +82,7 @@ def sendMsg(s):
 #paramaters:
 #			socket s (used to host connection)
 #return type: void
-def startSession(s):    
-    global username
+def startSession(s):
     host = input("Enter your session IP address: ")
     port = int(input("Enter your session port number: "))
     password = getpass("Enter your session password: ")
@@ -99,8 +96,8 @@ def startSession(s):
     
     #start therads
     c, addr = s.accept()
-    Thread(target=receiveMsg, args=(c,)).start()
-    Thread(target=sendMsg, args=(c,)).start()
+    Thread(target=receiveMsg, args=(c, username)).start()
+    Thread(target=sendMsg, args=(c, username)).start()
 
 
 #Join a session (as a client)
@@ -109,7 +106,6 @@ def startSession(s):
 #			socket s (used to join connection)
 #return type: void
 def connectToSession(s):    
-    global username
     host = input("Enter session IP: ")
     port = int(input("Enter session Port: "))
     password = getpass("Enter session password: ")
@@ -119,17 +115,14 @@ def connectToSession(s):
     s.connect((host, port))
     
     #start threads
-    Thread(target=receiveMsg, args=(s,)).start()
-    Thread(target=sendMsg, args=(s,)).start()
+    Thread(target=receiveMsg, args=(s, username)).start()
+    Thread(target=sendMsg, args=(s, username)).start()
 
 
-#______________________________________________________________________________________
-#required global vairables.
+#_____________________________________________________________________________________
+#int used as a boolean to determine if chat is still open
 session_open = 1
-username = ""
-#_______________________________________________________________________________________
-
-
+#______________________________________________________________________________________
 def main():
 	option = int(input("\n(1)Start a session\n(2)Connect to a session\nSelect an option: "))
 	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
