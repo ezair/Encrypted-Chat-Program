@@ -43,6 +43,8 @@ def isprime(num):
 
 
 #Generate big random prime numbers
+#parameters:
+#			int bit_length(...length of bits)
 #Return integers: p
 def generateRandomPrime(bit_length):
 	p = random.getrandbits(bit_length) | 2^(bit_length) | 1
@@ -50,13 +52,18 @@ def generateRandomPrime(bit_length):
 		p = random.getrandbits(bit_length) | 2^(bit_length) | 1
 	return p
 
+
 #Generates the random private keys a and b
+#parameters:
+#			int bit_length(...length of bits)
 #return type: int
 def generatePrivateKey(bit_length):
 	return random.getrandbits(bit_length)
 
 
 #Returns a Generator g
+#parameters:
+#			int p(Random prime number that you calculate q off of)
 #return type: int
 def generateGenerator(p):
 	q = (p-1)/2
