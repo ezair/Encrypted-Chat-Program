@@ -36,17 +36,62 @@ def closeConnection(s):
     sys.exit()
 
 
+
+#send keys from the client to the server.
+#these keys are formated as a string so that
+#they can be sent over a socket connection.
+#The client will have to take the keys as a string and split them
+#then type cast them back into integers.
+#parameters: socket s(the socket that you the server are hosting)
+#return type: void 
+#			  keys (the keys in the following form "g ga p")
+def sendKeysToClient(s):
+	global ga
+	p = generateRandomPrime(128)
+	#proble occuring right here.
+	#even though is of type int.
+	g = generateGenerator(p)
+	a = generatePrivateKey(128)
+	ga = pow(g, a, p)
+	#Shift right in order to make the keys 
+	keys = g + " " + ga + " " + p
+	s.send(keys.encode())
+
+
+#take the string passed in(keys_as_string) as a parameter
+#and split it into the keys it holds.
+#the string is in the form "g ga p"
+#After getting the individual keys, we now generate b and g^b
+#we then send g^b to the server. Then we have completed our key exchange.
+#after this we can being sending encrypted messages to one another.
+#parameters:
+#			s socket(The socket of the server you are sending keys to)
+#			string keys_as_string(the keys that the Server sends the clients)
+#						this is in the form "g ga p"
+#return type: void
+def sendKeysToServer(s, keys_as_string):
+	global gab
+	keys = keys_as_string.split(" ")
+	p = int(keys[2])
+	ga = int(keys[1])
+	g = int(keys[0])
+	b = generatePrivateKey(128)
+	gb = pow(g, b, p)
+	gab = pow(gb, a, p) >> 128
+	s.send(str(gb).encode())
+
+
 #Thread used for receiving messages.
 #paramaters: 
 #           socket s(socket that the client connects to)
-#return type: void 
+#return type: void
 def receiveMsg(s, username):
     global session_open
     print("*Enter '/quit' to exit chat*")
     while True:
         #Receive the message here
         if session_open:
-            msg = s.recv(100).decode()
+            msg = s.recv(128).decode()
             #if the message is blank we don't print it
             if not msg.endswith("> "):
                 print("\r\r" + msg + "\n", end="", flush=True)            
@@ -64,14 +109,6 @@ def receiveMsg(s, username):
 #return type: void 
 def sendMsg(s, username):
     global session_open
-
-    '''
-    #grab keys from the other user.
-    #now, we can form g to the gab and save it.
-    #string is formated as "g g^key p" with spaces between.
-    keys = s.recv(100).decode().split(" ")
-    gab = pow(keys[1], b)
-    '''
     while True:
     	#retrieve message here.
         if session_open:
@@ -100,19 +137,13 @@ def startSession(s):
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     s.bind((host, port))
     s.listen(5)
-    print("Waiting for a client to connect...")
-
-    '''
-    #create keys and send them to client as a tuple
-    p = generateRandomPrime(256)
-    a = generatePrivateKey(256)
-    g = generateGenerator(p)
-    ga = pow(g, a, p)
-    keys = str(g) + " " + str(ga), + " " + str(p)
-    '''
+    print("Waiting for a to connect...")
+    
+    c, addr = s.accept()
+    #we want to send the keys right now before threads start.
+    sendKeysToClient(s)
 
     #start therads
-    c, addr = s.accept()
     Thread(target=receiveMsg, args=(c, username)).start()
     Thread(target=sendMsg, args=(c, username)).start()
 
@@ -129,6 +160,15 @@ def connectToSession(s):
     username = "<" + input("Enter your session name: ") + "> " 
     s.connect((host, port))
 
+    #before starting threads, we grab the message the server sent us.
+    #the message sent was the keys that the server has.
+    #we will then send the Server our keys.
+    #then both client and server will have gab securely.
+    
+    #keys_as_string = s.recv(128).decode()
+    #sendKeysToServer(s, keys_as_string)
+
+
     #start threads
     Thread(target=receiveMsg, args=(s, username)).start()
     Thread(target=sendMsg, args=(s, username)).start()
@@ -136,7 +176,12 @@ def connectToSession(s):
 #_____________________________________________________________________________________
 #int used as a boolean to determine if chat is still open
 session_open = 1
+#this bottom variable needs to be global for both client and server to read it.
+#Threads cannot store values, so it is manditory for this as global inorder change it's value
+gab = 0
+ga = 0
 #______________________________________________________________________________________
+
 def main():
 	option = int(input("\n(1)Start a session\n(2)Connect to a session\nSelect an option: "))
 	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -153,7 +198,7 @@ def main():
 
 	#user entered a non-existent option
 	else:
-	    print("Incorrect option")
+	    print("Incorrect option.")
 	    sys.exit()
 
 if __name__ == '__main__':
