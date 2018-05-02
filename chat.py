@@ -36,7 +36,6 @@ def closeConnection(s):
     sys.exit()
 
 
-
 #send keys from the client to the server.
 #these keys are formated as a string so that
 #they can be sent over a socket connection.
@@ -44,18 +43,23 @@ def closeConnection(s):
 #then type cast them back into integers.
 #parameters: socket s(the socket that you the server are hosting)
 #return type: void 
-#			  keys (the keys in the following form "g ga p")
+#			  string keys(the keys in the following form "g ga p")
 def sendKeysToClient(s):
 	global ga
 	p = generateRandomPrime(128)
 	#proble occuring right here.
 	#even though is of type int.
-	g = generateGenerator(p)
 	a = generatePrivateKey(128)
+	g = generateGenerator(p)
 	ga = pow(g, a, p)
 	#Shift right in order to make the keys 
-	keys = g + " " + ga + " " + p
-	s.send(keys.encode())
+	keys = str(g) + " " + str(ga) + " " + str(p)
+
+	#send the keys to the client
+	try:
+		s.send(keys.encode())
+	except socket.error as e:
+		print("Failed to send key to client.")
 
 
 #take the string passed in(keys_as_string) as a parameter
@@ -79,7 +83,7 @@ def sendKeysToServer(s, keys_as_string):
 	gb = pow(g, b, p)
 	gab = pow(gb, a, p) >> 128
 	s.send(str(gb).encode())
-
+	print("Sending keys to server")
 
 #Thread used for receiving messages.
 #paramaters: 
@@ -87,14 +91,22 @@ def sendKeysToServer(s, keys_as_string):
 #return type: void
 def receiveMsg(s, username):
     global session_open
+
+    #get the keys back from the client.
+    #then send your version of the keys right back to it.
+    keys_as_string = s.recv(128).decode()
+    #print(keys_as_string)
+    #sendKeysToServer(s, keys_as_string)
+
     print("*Enter '/quit' to exit chat*")
     while True:
         #Receive the message here
         if session_open:
             msg = s.recv(128).decode()
             #if the message is blank we don't print it
-            if not msg.endswith("> "):
-                print("\r\r" + msg + "\n", end="", flush=True)            
+            if not msg.endswith("> ") or not msg.endswith("] "):
+                #print("\r\r" + msg + "\n", end="", flush=True)            
+            	pass
             #close the connection
             if msg.endswith(" /quit"):
                 closeConnection(s)
@@ -109,6 +121,12 @@ def receiveMsg(s, username):
 #return type: void 
 def sendMsg(s, username):
     global session_open
+    
+    #Basically, if this thread is the server thread,
+    #you are going to want to send the keys to the client
+    if username.endswith("] "):
+    	sendKeysToClient(s)
+    
     while True:
     	#retrieve message here.
         if session_open:
@@ -128,8 +146,10 @@ def sendMsg(s, username):
 #			socket s (used to host connection)
 #return type: void
 def startSession(s):
-    host = input("Enter your session IP address: ")
-    port = int(input("Enter your session port number: "))
+    host = "127.0.0.1"
+    port = 8080
+    #host = input("Enter your session IP address: ")
+    #port = int(input("Enter your session port number: "))
     password = getpass("Enter your session password: ")
     username =  "<" + input("Enter your session username: ") + "> "
     
@@ -139,14 +159,10 @@ def startSession(s):
     s.listen(5)
     print("Waiting for a to connect...")
     
+    #client connects.
     c, addr = s.accept()
-    #we want to send the keys right now before threads start.
-    sendKeysToClient(s)
-
-    #start therads
     Thread(target=receiveMsg, args=(c, username)).start()
     Thread(target=sendMsg, args=(c, username)).start()
-
 
 #Join a session (as a client)
 #Once successfully connected, computers begin to chat
@@ -154,20 +170,18 @@ def startSession(s):
 #			socket s (used to join connection)
 #return type: void
 def connectToSession(s):    
-    host = input("Enter session IP: ")
-    port = int(input("Enter session Port: "))
+    host = "127.0.0.1"
+    port = 8080
+    #host = input("Enter session IP: ")
+    #port = int(input("Enter session Port: "))
     password = getpass("Enter session password: ")
-    username = "<" + input("Enter your session name: ") + "> " 
+    username = "[" + input("Enter your session name: ") + "] " 
     s.connect((host, port))
 
     #before starting threads, we grab the message the server sent us.
     #the message sent was the keys that the server has.
     #we will then send the Server our keys.
     #then both client and server will have gab securely.
-    
-    #keys_as_string = s.recv(128).decode()
-    #sendKeysToServer(s, keys_as_string)
-
 
     #start threads
     Thread(target=receiveMsg, args=(s, username)).start()
