@@ -66,11 +66,11 @@ def generatePrivateKey(bit_length):
 #			int p(Random prime number that you calculate q off of)
 #return type: int
 def generateGenerator(p):
-	q = (p-1)/2
+	q = (p-1)//2
 	g = random.randint(2, q-1)
-	condition1 = pow(g, 1, p) ==  1 % p
-	condition2 = pow(g, 2, p) == 1 % p
-	condition3 = pow(g, q, p) == 1 % p
+	condition1 = (pow(g, 1, p) ==  1 % p)
+	condition2 = (pow(g, 2, p) == 1 % p)
+	condition3 = (pow(g, q, p) == 1 % p)
 	while condition1 or condition2 or condition3:
 		g = random.randint(2, q-1)
 	return g
