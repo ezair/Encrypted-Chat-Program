@@ -14,7 +14,6 @@ Description:    This program runs a peer to peer
                     pycrypto library (sudo apt-get install pycrypto)
                     AES.py
 '''
-import time
 import sys
 import socket
 import AES
@@ -159,10 +158,8 @@ def sendMsg(s, username):
 #			socket s (used to host connection)
 #return type: void
 def startSession(s):
-    host = "127.0.0.1"
-    port = 8080
-    #host = input("Enter your session IP address: ")
-    #port = int(input("Enter your session port number: "))
+    host = input("Enter your session IP address: ")
+    port = int(input("Enter your session port number: "))
     password = getpass("Enter your session password: ")
     username =  "<" + input("Enter your session username: ") + "> "
     
@@ -182,10 +179,8 @@ def startSession(s):
 #			socket s (used to join connection)
 #return type: void
 def connectToSession(s):    
-    host = "127.0.0.1"
-    port = 8080
-    #host = input("Enter session IP: ")
-    #port = int(input("Enter session Port: "))
+    host = input("Enter session IP: ")
+    port = int(input("Enter session Port: "))
     password = getpass("Enter session password: ")
     username = "[" + input("Enter your session name: ") + "] " 
     s.connect((host, port))
@@ -194,15 +189,18 @@ def connectToSession(s):
     Thread(target=receiveMsg, args=(s, username)).start()
     Thread(target=sendMsg, args=(s, username)).start()
 
+
 #_____________________________________________________________________________________
 #int used as a boolean to determine if chat is still open
 session_open = 1
-#this bottom variable needs to be global for both client and server to read it.
-#Threads cannot store values, so it is manditory for this as global inorder change it's value
-gab = 100
+#The global variables below are used to hold the values of certain keys.
+#Threads cannot store variable and communicate between one another.
+#This is a cheap fix for that issue.
+gab = 0
 a = 0
 p = 0
 #______________________________________________________________________________________
+
 
 def main():
 	option = int(input("\n(1)Start a session\n(2)Connect to a session\nSelect an option: "))
