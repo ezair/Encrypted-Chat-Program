@@ -48,8 +48,8 @@ def sendKeysToClient(s):
 	global a
 	global p
 	#generate all keys.
-	p = generateRandomPrime(1200)
-	a = generatePrivateKey(1200)
+	p = generateRandomPrime(128)
+	a = generatePrivateKey(128)
 	g = generateGenerator(p)
 	ga = pow(g, a, p)
 
