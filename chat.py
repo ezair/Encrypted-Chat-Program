@@ -14,6 +14,7 @@ Description:    This program runs a peer to peer
                     pycrypto library (sudo apt-get install pycrypto)
                     AES.py
 '''
+import time
 import sys
 import socket
 import AES
@@ -45,17 +46,16 @@ def closeConnection(s):
 #return type: void 
 #			  string keys(the keys in the following form "g ga p")
 def sendKeysToClient(s):
-	global ga
-	p = generateRandomPrime(128)
-	#proble occuring right here.
-	#even though is of type int.
-	a = generatePrivateKey(128)
+	global a
+	global p
+	#generate all keys.
+	p = generateRandomPrime(1200)
+	a = generatePrivateKey(1200)
 	g = generateGenerator(p)
 	ga = pow(g, a, p)
-	#Shift right in order to make the keys 
-	keys = str(g) + " " + str(ga) + " " + str(p)
 
 	#send the keys to the client
+	keys = str(g) + " " + str(ga) + " " + str(p)
 	try:
 		s.send(keys.encode())
 	except socket.error as e:
@@ -75,28 +75,45 @@ def sendKeysToClient(s):
 #return type: void
 def sendKeysToServer(s, keys_as_string):
 	global gab
+	global p
 	keys = keys_as_string.split(" ")
 	p = int(keys[2])
 	ga = int(keys[1])
 	g = int(keys[0])
-	b = generatePrivateKey(128)
+	b = generatePrivateKey(1200)
 	gb = pow(g, b, p)
-	gab = pow(gb, a, p) >> 128
-	s.send(str(gb).encode())
-	print("Sending keys to server")
+	gab = pow(ga, b, p) >> 128
 
+	#test shit to delete later.
+	print("p", p)
+	print("gb", gb)
+	print("gab", gab)
+	print("b", b)
+
+	#send b right here.
+	s.send(str(gb).encode())
 #Thread used for receiving messages.
 #paramaters: 
 #           socket s(socket that the client connects to)
 #return type: void
 def receiveMsg(s, username):
     global session_open
+    global gab
+
+    if username.endswith("] "):
+    	keys_as_string = s.recv(1200).decode()
+    	sendKeysToServer(s, keys_as_string)
+    else:
+    	gb = int(s.recv(1200).decode())
+    	print("a", a)
+    	print("gb", gb)
+    	print("p", p)
+    	gab = pow(gb, a, p) >> 128
+    	print("gab is", gab)
 
     #get the keys back from the client.
     #then send your version of the keys right back to it.
-    keys_as_string = s.recv(128).decode()
-    #print(keys_as_string)
-    #sendKeysToServer(s, keys_as_string)
+    #keys_as_string = s.recv(128).decode()
 
     print("*Enter '/quit' to exit chat*")
     while True:
@@ -104,9 +121,8 @@ def receiveMsg(s, username):
         if session_open:
             msg = s.recv(128).decode()
             #if the message is blank we don't print it
-            if not msg.endswith("> ") or not msg.endswith("] "):
-                #print("\r\r" + msg + "\n", end="", flush=True)            
-            	pass
+            if not msg.endswith("> ") and not msg.endswith("] "):
+                print("\r\r" + msg + "\n", end="", flush=True)            
             #close the connection
             if msg.endswith(" /quit"):
                 closeConnection(s)
@@ -121,24 +137,11 @@ def receiveMsg(s, username):
 #return type: void 
 def sendMsg(s, username):
     global session_open
-    
     #Basically, if this thread is the server thread,
     #you are going to want to send the keys to the client
-    if username.endswith("] "):
+    if username.endswith("> "):
     	sendKeysToClient(s)
-    
-    while True:
-    	#retrieve message here.
-        if session_open:
-            msg = username + input(username)
-            s.send(msg.encode())
-            #close connection if "/quit" as input
-            if msg.endswith(" /quit"):
-                closeConnection(s)
-        #close
-        else:
-        	closeConnection(s)
-
+  
 
 #Create a session (as a server) and wait for a client to connect.
 #Once a client successfully connects, computers begin to chat.
@@ -157,8 +160,7 @@ def startSession(s):
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     s.bind((host, port))
     s.listen(5)
-    print("Waiting for a to connect...")
-    
+    print("Waiting for a to connect...")  
     #client connects.
     c, addr = s.accept()
     Thread(target=receiveMsg, args=(c, username)).start()
@@ -178,11 +180,6 @@ def connectToSession(s):
     username = "[" + input("Enter your session name: ") + "] " 
     s.connect((host, port))
 
-    #before starting threads, we grab the message the server sent us.
-    #the message sent was the keys that the server has.
-    #we will then send the Server our keys.
-    #then both client and server will have gab securely.
-
     #start threads
     Thread(target=receiveMsg, args=(s, username)).start()
     Thread(target=sendMsg, args=(s, username)).start()
@@ -193,7 +190,8 @@ session_open = 1
 #this bottom variable needs to be global for both client and server to read it.
 #Threads cannot store values, so it is manditory for this as global inorder change it's value
 gab = 0
-ga = 0
+a = 0
+p = 0
 #______________________________________________________________________________________
 
 def main():
