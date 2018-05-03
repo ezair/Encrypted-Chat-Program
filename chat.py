@@ -99,9 +99,12 @@ def receiveMsg(s, username):
     global session_open
     global gab
 
+    #Send keys to server from client
     if username.endswith("] "):
     	keys_as_string = s.recv(1200).decode()
     	sendKeysToServer(s, keys_as_string)
+    
+    #Send keys to client from server
     else:
     	gb = int(s.recv(1200).decode())
     	print("a", a)
@@ -110,10 +113,7 @@ def receiveMsg(s, username):
     	gab = pow(gb, a, p) >> 128
     	print("gab is", gab)
 
-    #get the keys back from the client.
-    #then send your version of the keys right back to it.
-    #keys_as_string = s.recv(128).decode()
-
+    #Start the encrypted chat
     print("*Enter '/quit' to exit chat*")
     while True:
         #Receive the message here
