@@ -160,6 +160,7 @@ def startSession(s):
     s.bind((host, port))
     s.listen(5)
     print("Waiting for a to connect...")  
+    
     #client connects.
     c, addr = s.accept()
     Thread(target=receiveMsg, args=(c, username)).start()
