@@ -81,15 +81,7 @@ def sendKeysToServer(s, keys_as_string):
 	g = int(keys[0])
 	b = generatePrivateKey(1200)
 	gb = pow(g, b, p)
-	gab = pow(ga, b, p) >> 0
-
-	#test shit to delete later.
-	print("p", p)
-	print("gb", gb)
-	print("gab", gab)
-	print("b", b)
-
-	#send b right here.
+	gab = pow(ga, b, p) >> 128
 	s.send(str(gb).encode())
 #Thread used for receiving messages.
 #paramaters: 
