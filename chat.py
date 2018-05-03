@@ -82,7 +82,7 @@ def sendKeysToServer(s, keys_as_string):
 	g = int(keys[0])
 	b = generatePrivateKey(1200)
 	gb = pow(g, b, p)
-	gab = pow(ga, b, p) >> 128
+	gab = pow(ga, b, p) >> 0
 
 	#test shit to delete later.
 	print("p", p)
@@ -137,11 +137,21 @@ def receiveMsg(s, username):
 #return type: void 
 def sendMsg(s, username):
     global session_open
-    #Basically, if this thread is the server thread,
-    #you are going to want to send the keys to the client
+
+    #Send the keys to client before messages start.
     if username.endswith("> "):
-    	sendKeysToClient(s)
-  
+        sendKeysToClient(s)
+
+    while True:
+	   #retrieve message here.
+        if session_open:
+            msg = username + input(username)
+            s.send(msg.encode())
+            #close connection if "/quit" as input
+            if msg.endswith(" /quit"):
+                closeConnection(s)
+        else:
+            closeConnection(s)
 
 #Create a session (as a server) and wait for a client to connect.
 #Once a client successfully connects, computers begin to chat.
@@ -189,7 +199,7 @@ def connectToSession(s):
 session_open = 1
 #this bottom variable needs to be global for both client and server to read it.
 #Threads cannot store values, so it is manditory for this as global inorder change it's value
-gab = 0
+gab = 100
 a = 0
 p = 0
 #______________________________________________________________________________________
