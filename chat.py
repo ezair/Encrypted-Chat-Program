@@ -79,9 +79,9 @@ def sendKeysToServer(s, keys_as_string):
 	p = int(keys[2])
 	ga = int(keys[1])
 	g = int(keys[0])
-	b = generatePrivateKey(1200)
+	b = generatePrivateKey(128)
 	gb = pow(g, b, p)
-	gab = pow(ga, b, p) >> 128
+	gab = pow(ga, b, p)
 	s.send(str(gb).encode())
 #Thread used for receiving messages.
 #paramaters: 
@@ -93,16 +93,16 @@ def receiveMsg(s, username):
 
     #Send keys to server from client
     if username.endswith("] "):
-    	keys_as_string = s.recv(1200).decode()
+    	keys_as_string = s.recv(128).decode()
     	sendKeysToServer(s, keys_as_string)
     
     #Send keys to client from server
     else:
-    	gb = int(s.recv(1200).decode())
+    	gb = int(s.recv(128).decode())
     	print("a", a)
     	print("gb", gb)
     	print("p", p)
-    	gab = pow(gb, a, p) >> 128
+    	gab = pow(gb, a, p)
     	print("gab is", gab)
 
     #Start the encrypted chat
