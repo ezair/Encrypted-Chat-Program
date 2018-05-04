@@ -93,12 +93,11 @@ def sendKeysToServer(s, keys_as_string):
 def receiveMsg(s, username):
     global session_open
     global gab
-
+    
     #Send keys to server from client
     if username.endswith("] "):
     	keys_as_string = s.recv(4096).decode()
     	sendKeysToServer(s, keys_as_string)
-    
     #Send keys to client from server
     else:
     	gb = int(s.recv(4096).decode())
@@ -121,11 +120,11 @@ def receiveMsg(s, username):
             print("I got here:", decrypted_msg)
     
             #print out decrypted message.
-            #if not msg.endswith("> ") and not msg.endswith("] "):
-            print("\r\r" + decrypted_msg + "\n", end="", flush=True)           
-            #close the connection
-            if decrypted_msg.endswith(" /quit"):
-                closeConnection(s)
+            if not msg.endswith("> ") and not msg.endswith("] "):
+                print("\r\r" + decrypted_msg + "\n", end="", flush=True)           
+                #close the connection
+                if decrypted_msg.endswith(" /quit"):
+                    closeConnection(s)
         #close
         else:
             closeConnection(s)
