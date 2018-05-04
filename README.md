@@ -15,7 +15,7 @@ Requirements to run this program:
 		chat.py
 		Elgamal.py
 		AES.py
-
-	Libraries you must install:
-		pycrypto:
-			sudo apt-get install pycrypto
+		
+There will be a setup file added to this program when it is complete.
+It will run all required steps inorder to get this program up and running.
+The setup file will be called "setup.py" and will be in the "setup" folder
