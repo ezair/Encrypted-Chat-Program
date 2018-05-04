@@ -16,7 +16,8 @@ Description:    This program runs a peer to peer
 '''
 import sys
 import socket
-import AES
+import hashlib
+import pyaes
 from threading import Thread
 from getpass import getpass
 from os import system
@@ -73,16 +74,18 @@ def sendKeysToClient(s):
 #						this is in the form "g ga p"
 #return type: void
 def sendKeysToServer(s, keys_as_string):
-	global gab
-	global p
-	keys = keys_as_string.split(" ")
-	p = int(keys[2])
-	ga = int(keys[1])
-	g = int(keys[0])
-	b = generatePrivateKey(128)
-	gb = pow(g, b, p)
-	gab = pow(ga, b, p)
-	s.send(str(gb).encode())
+    global gab
+    global p
+    keys = keys_as_string.split(" ")
+    p = int(keys[2])
+    ga = int(keys[1])
+    g = int(keys[0])
+    b = generatePrivateKey(128)
+    gb = pow(g, b, p)
+    gab = pow(ga, b, p)
+    s.send(str(gb).encode())
+
+
 #Thread used for receiving messages.
 #paramaters: 
 #           socket s(socket that the client connects to)
@@ -93,29 +96,35 @@ def receiveMsg(s, username):
 
     #Send keys to server from client
     if username.endswith("] "):
-    	keys_as_string = s.recv(128).decode()
+    	keys_as_string = s.recv(4096).decode()
     	sendKeysToServer(s, keys_as_string)
     
     #Send keys to client from server
     else:
-    	gb = int(s.recv(128).decode())
-    	print("a", a)
-    	print("gb", gb)
-    	print("p", p)
+    	gb = int(s.recv(4096).decode())
     	gab = pow(gb, a, p)
-    	print("gab is", gab)
 
     #Start the encrypted chat
+    system("clear")
     print("*Enter '/quit' to exit chat*")
     while True:
-        #Receive the message here
+        #Receive the Encrypted message.
+        #we then decrypt it.
         if session_open:
-            msg = s.recv(128).decode()
-            #if the message is blank we don't print it
-            if not msg.endswith("> ") and not msg.endswith("] "):
-                print("\r\r" + msg + "\n", end="", flush=True)            
+            encrypted_msg = s.recv(4096)
+            print("gab is:", gab)
+            print(encrypted_msg)
+            #receive the message sent by other user and decrypt them.
+            key = hashlib.sha256(str(gab).encode('utf-8')).digest()[:16]
+            AES = pyaes.AESModeOfOperationCTR(key)
+            decrypted_msg = AES.decrypt(encrypted_msg).decode('utf-8')
+            print("I got here:", decrypted_msg)
+    
+            #print out decrypted message.
+            #if not msg.endswith("> ") and not msg.endswith("] "):
+            print("\r\r" + decrypted_msg + "\n", end="", flush=True)           
             #close the connection
-            if msg.endswith(" /quit"):
+            if decrypted_msg.endswith(" /quit"):
                 closeConnection(s)
         #close
         else:
@@ -136,11 +145,19 @@ def sendMsg(s, username):
     while True:
 	   #retrieve message here.
         if session_open:
-            msg = username + input(username)
-            s.send(msg.encode())
-            #close connection if "/quit" as input
+            #create and send encrypted message.
+            key = hashlib.sha256(str(gab).encode('utf-8')).digest()
+            AES = pyaes.AESModeOfOperationCTR(key)
+            msg = username + input(username) 
+            encrypted_msg = AES.encrypt(msg.encode('utf-8'))
+
+            #check if user wants to quit.
             if msg.endswith(" /quit"):
                 closeConnection(s)
+            else:     
+                print("I got here tho")
+                s.send(encrypted_msg)
+        #close connection
         else:
             closeConnection(s)
 
@@ -150,8 +167,10 @@ def sendMsg(s, username):
 #			socket s (used to host connection)
 #return type: void
 def startSession(s):
-    host = input("Enter your session IP address: ")
-    port = int(input("Enter your session port number: "))
+    host = '127.0.0.1'
+    port = 8080
+    #host = input("Enter your session IP address: ")
+    #port = int(input("Enter your session port number: "))
     password = getpass("Enter your session password: ")
     username =  "<" + input("Enter your session username: ") + "> "
     
@@ -159,12 +178,15 @@ def startSession(s):
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     s.bind((host, port))
     s.listen(5)
-    print("Waiting for a to connect...")  
-    
+    print("\nWaiting for a to connect...")  
+    print("The IP to connect to is:", host)
+    print("The Port to connect to is:", port)
+
     #client connects.
     c, addr = s.accept()
     Thread(target=receiveMsg, args=(c, username)).start()
     Thread(target=sendMsg, args=(c, username)).start()
+
 
 #Join a session (as a client)
 #Once successfully connected, computers begin to chat
@@ -172,13 +194,21 @@ def startSession(s):
 #			socket s (used to join connection)
 #return type: void
 def connectToSession(s):    
-    host = input("Enter session IP: ")
-    port = int(input("Enter session Port: "))
+    host = '127.0.0.1'
+    port = 8080
+    #host = input("Enter session IP: ")
+    #port = int(input("Enter session Port: "))
     password = getpass("Enter session password: ")
     username = "[" + input("Enter your session name: ") + "] " 
-    s.connect((host, port))
+    
+    #attempt to connect.
+    try:
+        s.connect((host, port))
+    except socket.error as e:
+        print('Information must be Incorrect. There is no host "' + str(host) + "'")
+        sys.exit()
 
-    #start threads
+    #start threads if connected.
     Thread(target=receiveMsg, args=(s, username)).start()
     Thread(target=sendMsg, args=(s, username)).start()
 
