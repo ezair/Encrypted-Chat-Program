@@ -1,0 +1,4 @@
+Things I would like to do before due date.
+
+Make a sound every time a user receives a message
+Make sure that the sound isn't the most fucking anoything thing ever

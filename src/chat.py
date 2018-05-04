@@ -22,6 +22,7 @@ from threading import Thread
 from getpass import getpass
 from os import system
 from Elgamal import generatePrivateKey, generateGenerator, generateRandomPrime
+from pygame import mixer
 
 
 #close the connection on server.
@@ -35,6 +36,16 @@ def closeConnection(s):
     session_open = 0
     s.close()
     sys.exit()
+
+
+#play a sound when user receives a message
+#parameters:
+#           string path_to_sound(...path to the sound file)
+#return type: void
+def playReceiveSound(path_to_sound):
+    mixer.init()
+    mixer.music.load(path_to_sound)
+    mixer.music.play()
 
 
 #send keys from the client to the server.
@@ -102,25 +113,27 @@ def receiveMsg(s, username):
     else:
     	gb = int(s.recv(4096).decode())
     	gab = pow(gb, a, p)
-
-    #Start the encrypted chat
+    
     system("clear")
     print("*Enter '/quit' to exit chat*")
+    #Start the encrypted chat
     while True:
         #Receive the Encrypted message.
         #we then decrypt it.
         if session_open:
             encrypted_msg = s.recv(4096)
-            print("gab is:", gab)
             print(encrypted_msg)
             #receive the message sent by other user and decrypt them.
-            key = hashlib.sha256(str(gab).encode('utf-8')).digest()[:16]
+            print("gab", gab)
+            key = hashlib.sha256(str(gab).encode()).digest()[:16]
             AES = pyaes.AESModeOfOperationCTR(key)
-            decrypted_msg = AES.decrypt(encrypted_msg).decode('utf-8')
+            decrypted_msg = AES.decrypt(encrypted_msg).decode('windows-1252')
             print("I got here:", decrypted_msg)
-    
+
+
             #print out decrypted message.
-            if not msg.endswith("> ") and not msg.endswith("] "):
+            if not decrypted_msg.endswith("> ") and not decrypted_msg.endswith("] "):
+                playReceiveSound("../sounds/received.mp3")
                 print("\r\r" + decrypted_msg + "\n", end="", flush=True)           
                 #close the connection
                 if decrypted_msg.endswith(" /quit"):
@@ -145,16 +158,17 @@ def sendMsg(s, username):
 	   #retrieve message here.
         if session_open:
             #create and send encrypted message.
-            key = hashlib.sha256(str(gab).encode('utf-8')).digest()
+            key = hashlib.sha256(str(gab).encode()).digest()
             AES = pyaes.AESModeOfOperationCTR(key)
             msg = username + input(username) 
-            encrypted_msg = AES.encrypt(msg.encode('utf-8'))
-
+            encrypted_msg = AES.encrypt(msg)
+            print("encrypted_msg", encrypted_msg)
             #check if user wants to quit.
             if msg.endswith(" /quit"):
                 closeConnection(s)
             else:     
-                print("I got here tho")
+                print("Encrypted message below.")
+                print(encrypted_msg)
                 s.send(encrypted_msg)
         #close connection
         else:
