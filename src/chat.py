@@ -124,12 +124,12 @@ def receiveMsg(s, username):
             encrypted_msg = s.recv(4096)
             print(encrypted_msg)
             #receive the message sent by other user and decrypt them.
-            print("gab", gab)
             key = hashlib.sha256(str(gab).encode()).digest()[:16]
             AES = pyaes.AESModeOfOperationCTR(key)
-            decrypted_msg = AES.decrypt(encrypted_msg).decode('windows-1252')
-            print("I got here:", decrypted_msg)
-
+            decrypted_msg = AES.decrypt(encrypted_msg)
+            AES = pyaes.AESModeOfOperationCTR(key)
+            decrypted_msg = decrypted_msg.decode()
+            print("decrypted_msg:", decrypted_msg)
 
             #print out decrypted message.
             if not decrypted_msg.endswith("> ") and not decrypted_msg.endswith("] "):
@@ -166,9 +166,7 @@ def sendMsg(s, username):
             #check if user wants to quit.
             if msg.endswith(" /quit"):
                 closeConnection(s)
-            else:     
-                print("Encrypted message below.")
-                print(encrypted_msg)
+            else:
                 s.send(encrypted_msg)
         #close connection
         else:
