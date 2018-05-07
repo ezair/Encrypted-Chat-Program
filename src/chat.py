@@ -14,6 +14,7 @@ Description:    This program runs a peer to peer
                     pycrypto library (sudo apt-get install pycrypto)
                     AES.py
 '''
+import time
 import sys
 import socket
 import hashlib
@@ -70,7 +71,7 @@ def sendKeysToClient(s):
 	try:
 		s.send(keys.encode())
 	except socket.error as e:
-		print("Failed to send key to client.")
+		print("Failed to send keys to the client.")
 
 
 #take the string passed in(keys_as_string) as a parameter
@@ -117,20 +118,12 @@ def receiveMsg(s, username):
     system("clear")
     print("*Enter '/quit' to exit chat*")
     #Start the encrypted chat
-    key = hashlib.sha256(str(gab).encode()).digest()[:16]
     while True:
-        print("gab:", gab)
-        print("i got here:")
-        print("key:", key)
-        #Receive the Encrypted message.
+        key = hashlib.sha256(str(gab).encode()).digest()
+        #Receive the Encrypted message and decrypt.
         if session_open:
             msg = s.recv(4096)
-            print("message at received:", msg)
-            #Decrypt message
-            decrypted_msg = pyaes.AESModeOfOperationCTR(key).decrypt(msg).decode('latin1')
-            print("encrypted_msg:", msg)
-            print("decrypted_msg:", decrypted_msg)
-
+            decrypted_msg = pyaes.AESModeOfOperationCTR(key).decrypt(msg).decode()
             #print out decrypted message.
             if not decrypted_msg.endswith("> ") and not decrypted_msg.endswith("] "):
                 playReceiveSound("../sounds/received.mp3")
@@ -150,19 +143,22 @@ def receiveMsg(s, username):
 def sendMsg(s, username):
     global session_open
     global gab
+
     #Send the keys to client before messages start.
     if username.endswith("> "):
         sendKeysToClient(s)
 
-    key = hashlib.sha256(str(gab).encode()).digest()
+   #...cuz globals are dumb...this is required.
+    while gab == 0:
+        time.sleep(1)
+    
     while True:
+        key = hashlib.sha256(str(gab).encode()).digest()
 	   #retrieve message here.
         if session_open:
             #create and send encrypted message.
             msg = username + input(username) 
             encrypted_msg = pyaes.AESModeOfOperationCTR(key).encrypt(msg)
-            print("encrypted_msg", encrypted_msg)
-            #check if user wants to quit.
             if msg.endswith(" /quit"):
                 closeConnection(s)
             else:
