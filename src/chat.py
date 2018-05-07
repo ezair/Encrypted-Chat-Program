@@ -117,18 +117,18 @@ def receiveMsg(s, username):
     system("clear")
     print("*Enter '/quit' to exit chat*")
     #Start the encrypted chat
+    key = hashlib.sha256(str(gab).encode()).digest()[:16]
     while True:
+        print("gab:", gab)
+        print("i got here:")
+        print("key:", key)
         #Receive the Encrypted message.
-        #we then decrypt it.
         if session_open:
-            encrypted_msg = s.recv(4096)
-            print(encrypted_msg)
-            #receive the message sent by other user and decrypt them.
-            key = hashlib.sha256(str(gab).encode()).digest()[:16]
-            AES = pyaes.AESModeOfOperationCTR(key)
-            decrypted_msg = AES.decrypt(encrypted_msg)
-            AES = pyaes.AESModeOfOperationCTR(key)
-            decrypted_msg = decrypted_msg.decode()
+            msg = s.recv(4096)
+            print("message at received:", msg)
+            #Decrypt message
+            decrypted_msg = pyaes.AESModeOfOperationCTR(key).decrypt(msg).decode('latin1')
+            print("encrypted_msg:", msg)
             print("decrypted_msg:", decrypted_msg)
 
             #print out decrypted message.
@@ -149,19 +149,18 @@ def receiveMsg(s, username):
 #return type: void 
 def sendMsg(s, username):
     global session_open
-
+    global gab
     #Send the keys to client before messages start.
     if username.endswith("> "):
         sendKeysToClient(s)
 
+    key = hashlib.sha256(str(gab).encode()).digest()
     while True:
 	   #retrieve message here.
         if session_open:
             #create and send encrypted message.
-            key = hashlib.sha256(str(gab).encode()).digest()
-            AES = pyaes.AESModeOfOperationCTR(key)
             msg = username + input(username) 
-            encrypted_msg = AES.encrypt(msg)
+            encrypted_msg = pyaes.AESModeOfOperationCTR(key).encrypt(msg)
             print("encrypted_msg", encrypted_msg)
             #check if user wants to quit.
             if msg.endswith(" /quit"):
