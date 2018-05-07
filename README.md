@@ -14,7 +14,6 @@ Requirements to run this program:
 	Files required:
 		chat.py
 		Elgamal.py
-		AES.py
 		
 There will be a setup file added to this program when it is complete.
 It will run all required steps inorder to get this program up and running.
