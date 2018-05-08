@@ -12,7 +12,7 @@ Description:    This program runs a peer to peer
                     python3
                     Elgamal.py
                     pycrypto library (sudo apt-get install pycrypto)
-                    AES.py
+                    pygame Library (sudo pip install pygame) make sure it is python3 pygame.
 '''
 import time
 import sys
@@ -38,7 +38,6 @@ def closeConnection(s):
     s.close()
     sys.exit()
 
-
 #play a sound when user receives a message
 #parameters:
 #           string path_to_sound(...path to the sound file)
@@ -60,7 +59,8 @@ def playReceiveSound(path_to_sound):
 def sendKeysToClient(s):
 	global a
 	global p
-	#generate all keys.
+	
+    #generate all keys.
 	p = generateRandomPrime(128)
 	a = generatePrivateKey(128)
 	g = generateGenerator(p)
@@ -124,6 +124,7 @@ def receiveMsg(s, username):
         if session_open:
             msg = s.recv(4096)
             decrypted_msg = pyaes.AESModeOfOperationCTR(key).decrypt(msg).decode()
+            
             #print out decrypted message.
             if not decrypted_msg.endswith("> ") and not decrypted_msg.endswith("] "):
                 playReceiveSound("../sounds/received.mp3")
@@ -149,9 +150,8 @@ def sendMsg(s, username):
         sendKeysToClient(s)
 
    #...cuz globals are dumb...this is required.
-    while gab == 0:
-        time.sleep(1)
-    
+    time.sleep(1)
+
     while True:
         key = hashlib.sha256(str(gab).encode()).digest()
 	   #retrieve message here.
@@ -173,23 +173,33 @@ def sendMsg(s, username):
 #			socket s (used to host connection)
 #return type: void
 def startSession(s):
-    host = '127.0.0.1'
-    port = 8080
-    #host = input("Enter your session IP address: ")
-    #port = int(input("Enter your session port number: "))
+    host = input("Enter your session IP address: ")
+    port = int(input("Enter your session port number: "))
     password = getpass("Enter your session password: ")
-    username =  "<" + input("Enter your session username: ") + "> "
-    
+    #username can't be empty string. Make first letter upperacase automatically.
+    username = ""
+    while username == "":
+        username = input("Enter your session name(cannot be empty): ").rstrip(" ")
+    username = "[" + username[0].upper() + username[1 : ] + "] "
+
     #create the session using given info.
-    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    s.bind((host, port))
-    s.listen(5)
+    try:
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        s.bind((host, port))
+        s.listen(5)
+    #unable to host a connection
+    except socket.error as e:
+        print("Unable to set up a connection on IP address:", host, "port number", port)
+        s.close()
+        sys.exit()
+
+    #client connects.
     print("\nWaiting for a to connect...")  
     print("The IP to connect to is:", host)
     print("The Port to connect to is:", port)
-
-    #client connects.
     c, addr = s.accept()
+    
+    #Sending and receiving up and running.
     Thread(target=receiveMsg, args=(c, username)).start()
     Thread(target=sendMsg, args=(c, username)).start()
 
@@ -199,13 +209,15 @@ def startSession(s):
 #paramaters:
 #			socket s (used to join connection)
 #return type: void
-def connectToSession(s):    
-    host = '127.0.0.1'
-    port = 8080
-    #host = input("Enter session IP: ")
-    #port = int(input("Enter session Port: "))
+def connectToSession(s):
+    host = input("Enter session IP: ")
+    port = int(input("Enter session Port: "))
     password = getpass("Enter session password: ")
-    username = "[" + input("Enter your session name: ") + "] " 
+    #username cannot be an empty string. Make first letter capital automatically.
+    username = ""
+    while username == "":
+        username = input("Enter your session name(cannot be empty): ").rstrip(" ")
+    username = "<" + username[0].upper() + username[1 : ] + "> "
     
     #attempt to connect.
     try:
@@ -239,12 +251,10 @@ def main():
 	#Must wait for another user to join.
 	if option == 1:
 	    startSession(s)
-
 	#user is connecting to a session.
 	#Must enter correct session info.
 	elif option == 2:
 	    connectToSession(s)
-
 	#user entered a non-existent option
 	else:
 	    print("Incorrect option.")
