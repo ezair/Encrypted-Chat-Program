@@ -179,7 +179,7 @@ def startSession(s):
     #username can't be empty string. Make first letter upperacase automatically.
     username = ""
     while username == "":
-        username = input("Enter your session name(cannot be empty): ").rstrip(" ")
+        username = input("Enter your session username(cannot be empty): ").rstrip(" ")
     username = "[" + username[0].upper() + username[1 : ] + "] "
 
     #create the session using given info.
@@ -216,7 +216,7 @@ def connectToSession(s):
     #username cannot be an empty string. Make first letter capital automatically.
     username = ""
     while username == "":
-        username = input("Enter your session name(cannot be empty): ").rstrip(" ")
+        username = input("Enter your session username(cannot be empty): ").rstrip(" ")
     username = "<" + username[0].upper() + username[1 : ] + "> "
     
     #attempt to connect.
