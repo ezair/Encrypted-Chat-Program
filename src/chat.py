@@ -38,6 +38,7 @@ def closeConnection(s):
     s.close()
     sys.exit()
 
+
 #play a sound when user receives a message
 #parameters:
 #           string path_to_sound(...path to the sound file)
@@ -150,7 +151,8 @@ def sendMsg(s, username):
         sendKeysToClient(s)
 
    #...cuz globals are dumb...this is required.
-    time.sleep(1)
+    while gab == 0:
+        time.sleep(1)
 
     while True:
         key = hashlib.sha256(str(gab).encode()).digest()
@@ -167,6 +169,7 @@ def sendMsg(s, username):
         else:
             closeConnection(s)
 
+
 #Create a session (as a server) and wait for a client to connect.
 #Once a client successfully connects, computers begin to chat.
 #paramaters:
@@ -176,11 +179,6 @@ def startSession(s):
     host = input("Enter your session IP address: ")
     port = int(input("Enter your session port number: "))
     password = getpass("Enter your session password: ")
-    #username can't be empty string. Make first letter upperacase automatically.
-    username = ""
-    while username == "":
-        username = input("Enter your session username(cannot be empty): ").rstrip(" ")
-    username = "[" + username[0].upper() + username[1 : ] + "] "
 
     #create the session using given info.
     try:
@@ -193,12 +191,18 @@ def startSession(s):
         s.close()
         sys.exit()
 
+    #username cannot be an < 5 chars long.
+    #make username first letter capital automatically.
+    username = ""
+    while len(username) < 5:
+        username = input("Enter your session username(must be at least 5): ").rstrip(" ")
+    username = "[" + username[0].upper() + username[1 : ] + "] "
+
     #client connects.
     print("\nWaiting for a to connect...")  
     print("The IP to connect to is:", host)
     print("The Port to connect to is:", port)
     c, addr = s.accept()
-    
     #Sending and receiving up and running.
     Thread(target=receiveMsg, args=(c, username)).start()
     Thread(target=sendMsg, args=(c, username)).start()
@@ -213,18 +217,20 @@ def connectToSession(s):
     host = input("Enter session IP: ")
     port = int(input("Enter session Port: "))
     password = getpass("Enter session password: ")
-    #username cannot be an empty string. Make first letter capital automatically.
-    username = ""
-    while username == "":
-        username = input("Enter your session username(cannot be empty): ").rstrip(" ")
-    username = "<" + username[0].upper() + username[1 : ] + "> "
-    
+
     #attempt to connect.
     try:
         s.connect((host, port))
     except socket.error as e:
-        print('Information must be Incorrect. There is no host "' + str(host) + "'")
+        print('Information must be Incorrect. There is no host "' + str(host) + "' with port '" + str(port) + "'")
         sys.exit()
+
+    #username cannot be an < 5 chars long.
+    #make username first letter capital automatically.
+    username = ""
+    while len(username) < 5:
+        username = input("Enter your session username(must be at least 5 characters): ").rstrip(" ")
+    username = "<" + username[0].upper() + username[1 : ] + "> "
 
     #start threads if connected.
     Thread(target=receiveMsg, args=(s, username)).start()
