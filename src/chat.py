@@ -11,7 +11,7 @@ Description:    This program runs a peer to peer
                 Dependencies:
                     python3
                     Elgamal.py
-                    pycrypto library (sudo apt-get install pycrypto)
+                    pyaes (deb file can be found online.)
                     pygame Library (sudo pip install pygame) make sure it is python3 pygame.
 '''
 import time
