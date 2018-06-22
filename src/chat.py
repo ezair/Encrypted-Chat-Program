@@ -4,9 +4,10 @@ File:   chat.py
 Description:    This program runs a peer to peer
                 two person encrypted chat program.
                 Keys are generated with elgamal public 
-                key encryption.
+                key encryption from the Elgamal module
+		located in this floder.
                 Encryption is done with AES encryption
-                from the pycrypto language.
+                from the pyaes library.
 
                 Dependencies:
                     python3
