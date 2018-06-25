@@ -200,7 +200,7 @@ def startSession(s):
     username = "[" + username[0].upper() + username[1 : ] + "] "
 
     #client connects.
-    print("\nWaiting for a to connect...")  
+    print("\nWaiting for a client to connect...")  
     print("The IP to connect to is:", host)
     print("The Port to connect to is:", port)
     c, addr = s.accept()
