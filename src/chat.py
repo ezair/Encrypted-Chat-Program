@@ -5,7 +5,7 @@ Description:    This program runs a peer to peer
                 two person encrypted chat program.
                 Keys are generated with elgamal public 
                 key encryption from the Elgamal module
-		located in this floder.
+		located in this folder.
                 Encryption is done with AES encryption
                 from the pyaes library.
 
@@ -28,6 +28,7 @@ from pygame import mixer
 
 
 #close the connection on server.
+#exit the chat program.
 #parameters:
 #			socket s(socket that the server is on)
 #return type: void
@@ -40,7 +41,7 @@ def closeConnection(s):
     sys.exit()
 
 
-#play a sound when user receives a message
+#play a sound when user receives a message.
 #parameters:
 #           string path_to_sound(...path to the sound file)
 #return type: void
